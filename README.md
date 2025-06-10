@@ -1,5 +1,7 @@
 ## 🎓 **EDUCATIONAL PURPOSE STATEMENT**
 
+- **Please leave a star if you want more updates, for assistance/feature requests message @highnotes on discord**
+  
 > **📚 THIS IS A CYBERSECURITY EDUCATION TOOL** - Designed to demonstrate how phishing attacks work so people can learn to defend against them.
 
 > **⚠️ EDUCATIONAL USE ONLY** - This platform is exclusively for cybersecurity education, training courses, and demonstrating attack techniques in safe, controlled learning environments.
