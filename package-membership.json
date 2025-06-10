@@ -1,0 +1,15 @@
+{
+  "name": "membership-server",
+  "version": "1.0.0",
+  "description": "Customer management API server",
+  "main": "membership-server.js",
+  "scripts": {
+    "start": "node membership-server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "uuid": "^11.1.0",
+    "path": "^0.12.7"
+  }
+} 

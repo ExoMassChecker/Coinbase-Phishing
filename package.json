@@ -1,0 +1,35 @@
+{
+  "name": "phishing-awareness-demo",
+  "version": "1.0.0",
+  "description": "Educational phishing awareness demonstration with all malicious functionality disabled. Shows how sophisticated phishing attacks operate for security training purposes only.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "educational-demo": "echo 'Starting educational phishing awareness demo...' && node index.js",
+    "disabled-bot": "echo 'Discord bot functionality has been disabled for educational safety' && node discord-bot.js",
+    "disabled-membership": "echo 'Membership server functionality has been disabled for educational safety'"
+  },
+  "keywords": [
+    "cybersecurity",
+    "phishing",
+    "education",
+    "security-awareness",
+    "demonstration",
+    "training",
+    "defensive-security"
+  ],
+  "author": "Educational Security Demonstration",
+  "license": "Educational Use Only",
+  "dependencies": {
+    "axios": "^1.9.0",
+    "cookie-parser": "^1.4.7",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "path": "^0.12.7",
+    "socket.io": "^4.8.1",
+    "uuid": "^11.1.0"
+  }
+}

@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Access</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Subtle animated background */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(30, 30, 30, 0.5) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(40, 40, 40, 0.3) 0%, transparent 50%);
+            animation: subtleGradient 20s ease infinite;
+            z-index: -1;
+        }
+
+        @keyframes subtleGradient {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .login-container {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            padding: 48px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+            width: 100%;
+            max-width: 420px;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-header h1 {
+            font-size: 2em;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            color: #666666;
+            font-size: 0.95em;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #cccccc;
+            font-size: 0.9em;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 16px 20px;
+            padding-left: 50px;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            background: #151515;
+            color: #ffffff;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control::placeholder {
+            color: #555555;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #0052FF;
+            background: #1a1a1a;
+            box-shadow: 0 0 0 3px rgba(0, 82, 255, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666666;
+            font-size: 16px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: #0052FF;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            background: #0041CC;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 82, 255, 0.3);
+        }
+
+        .btn:disabled {
+            background: #333333;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .error-message {
+            background: #1a0606;
+            border: 1px solid #e74c3c;
+            color: #ff6b6b;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 16px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: #061a06;
+            border: 1px solid #2ecc71;
+            color: #4ade80;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 16px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .loading-spinner {
+            display: none;
+            margin-left: 8px;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .attempt-counter {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 0.85em;
+            color: #666666;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                margin: 20px;
+                padding: 32px 24px;
+            }
+            
+            .login-header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1><i class="fas fa-shield-alt"></i> Admin Portal</h1>
+            <p>Analytics Dashboard</p>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <div class="input-container">
+                    <i class="fas fa-user input-icon"></i>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-control" 
+                        placeholder="Enter username"
+                        required
+                        autocomplete="username"
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-container">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-control" 
+                        placeholder="Enter password"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+            </div>
+
+            <button type="submit" class="btn" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i> Access Dashboard
+                <span class="loading-spinner">
+                    <div class="spinner"></div>
+                </span>
+            </button>
+
+            <div class="error-message" id="errorMessage">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="errorText">Invalid credentials. Please try again.</span>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                <i class="fas fa-check-circle"></i>
+                Authentication successful! Redirecting...
+            </div>
+
+            <div class="attempt-counter" id="attemptCounter">
+                <!-- Attempt counter will be shown here -->
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let attemptCount = 0;
+        const maxAttempts = 3;
+        const lockoutTime = 15 * 60 * 1000; // 15 minutes
+
+        // Check if user is locked out
+        function checkLockout() {
+            const lockoutData = localStorage.getItem('adminLockout');
+            if (lockoutData) {
+                const { timestamp, attempts } = JSON.parse(lockoutData);
+                const now = Date.now();
+                
+                if (attempts >= maxAttempts && (now - timestamp) < lockoutTime) {
+                    const remainingTime = Math.ceil((lockoutTime - (now - timestamp)) / 60000);
+                    showError(`Too many failed attempts. Please try again in ${remainingTime} minutes.`);
+                    document.getElementById('loginBtn').disabled = true;
+                    return true;
+                }
+                
+                if ((now - timestamp) >= lockoutTime) {
+                    localStorage.removeItem('adminLockout');
+                }
+            }
+            return false;
+        }
+
+        // Update attempt counter
+        function updateAttemptCounter() {
+            const lockoutData = localStorage.getItem('adminLockout');
+            if (lockoutData) {
+                const { attempts } = JSON.parse(lockoutData);
+                const remaining = maxAttempts - attempts;
+                if (remaining > 0) {
+                    document.getElementById('attemptCounter').textContent = 
+                        `Attempts remaining: ${remaining}/${maxAttempts}`;
+                    document.getElementById('attemptCounter').style.display = 'block';
+                }
+            }
+        }
+
+        // Record failed attempt
+        function recordFailedAttempt() {
+            const lockoutData = localStorage.getItem('adminLockout');
+            let attempts = 1;
+            
+            if (lockoutData) {
+                const data = JSON.parse(lockoutData);
+                attempts = data.attempts + 1;
+            }
+            
+            localStorage.setItem('adminLockout', JSON.stringify({
+                timestamp: Date.now(),
+                attempts: attempts
+            }));
+            
+            updateAttemptCounter();
+            
+            if (attempts >= maxAttempts) {
+                showError(`Maximum attempts exceeded. Access locked for 15 minutes.`);
+                document.getElementById('loginBtn').disabled = true;
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Handle form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (checkLockout()) {
+                return;
+            }
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const spinner = document.querySelector('.loading-spinner');
+            
+            // Show loading state
+            loginBtn.disabled = true;
+            spinner.style.display = 'inline-block';
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+            
+            try {
+                const response = await fetch('/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    localStorage.removeItem('adminLockout');
+                    showSuccess('Authentication successful! Redirecting...');
+                    
+                    setTimeout(() => {
+                        window.location.href = '/admin';
+                    }, 1500);
+                } else {
+                    recordFailedAttempt();
+                    showError(result.message || 'Invalid credentials. Please try again.');
+                }
+            } catch (error) {
+                showError('Connection error. Please try again.');
+                console.error('Login error:', error);
+            } finally {
+                // Reset button state
+                setTimeout(() => {
+                    if (!document.getElementById('loginBtn').disabled) {
+                        loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Access Dashboard';
+                        spinner.style.display = 'none';
+                        loginBtn.disabled = false;
+                    }
+                }, 1000);
+            }
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLockout();
+            updateAttemptCounter();
+            
+            // Focus username field
+            document.getElementById('username').focus();
+            
+            // Add subtle interactive effects
+            const inputs = document.querySelectorAll('.form-control');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'scale(1.01)';
+                    this.parentElement.style.transition = 'transform 0.2s ease';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'scale(1)';
+                });
+            });
+        });
+
+        // Clear error messages when typing
+        document.getElementById('username').addEventListener('input', function() {
+            document.getElementById('errorMessage').style.display = 'none';
+        });
+        
+        document.getElementById('password').addEventListener('input', function() {
+            document.getElementById('errorMessage').style.display = 'none';
+        });
+
+        // Add keyboard shortcut
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>

